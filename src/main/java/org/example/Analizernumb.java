@@ -22,20 +22,14 @@ public class Analizernumb {
         notifyAll();
     }
 
-    private void sendDone() {
-        try { queue.put("DONE"); } catch (InterruptedException ignored) {}
-    }
-
     public void fizz() {
         while (true) {
             synchronized (this) {
                 while (current <= n && !(current % 3 == 0 && current % 5 != 0)) {
                     try { wait(); } catch (InterruptedException ignored) {}
                 }
-                if (current > n) {
-                    sendDone();
-                    return;
-                }
+                if (current > n) return;
+
                 try { queue.put("fizz"); } catch (InterruptedException ignored) {}
                 increment();
             }
@@ -48,10 +42,8 @@ public class Analizernumb {
                 while (current <= n && !(current % 5 == 0 && current % 3 != 0)) {
                     try { wait(); } catch (InterruptedException ignored) {}
                 }
-                if (current > n) {
-                    sendDone();
-                    return;
-                }
+                if (current > n) return;
+
                 try { queue.put("buzz"); } catch (InterruptedException ignored) {}
                 increment();
             }
@@ -64,10 +56,8 @@ public class Analizernumb {
                 while (current <= n && !(current % 15 == 0)) {
                     try { wait(); } catch (InterruptedException ignored) {}
                 }
-                if (current > n) {
-                    sendDone();
-                    return;
-                }
+                if (current > n) return;
+
                 try { queue.put("fizzbuzz"); } catch (InterruptedException ignored) {}
                 increment();
             }
@@ -81,30 +71,43 @@ public class Analizernumb {
                         !(current % 3 != 0 && current % 5 != 0)) {
                     try { wait(); } catch (InterruptedException ignored) {}
                 }
-                if (current > n) {
-                    sendDone();
-                    return;
-                }
+                if (current > n) return;
+
                 try { queue.put(String.valueOf(current)); }
                 catch (InterruptedException ignored) {}
+
                 increment();
             }
         }
     }
 
     public void output() {
-        int doneCount = 0;
+        int count = 0;
 
-        while (doneCount < 4) {
+        while (count < n) {         // <-- найважливіше виправлення
             try {
                 String value = queue.take();
-
-                if (value.equals("DONE")) {
-                    doneCount++;
-                    continue;
-                }
-
+                count++;            // рахуємо рівно n оброблених елементів
                 System.out.println(value);
-
             } catch (InterruptedException ignored) {}
+        }
 
+        // після n елементів output завершиться → всі продюсери давно закінчили
+    }
+
+    public static void main(String[] args) {
+        Analizernumb fb = new Analizernumb(15);
+
+        Thread A = new Thread(fb::fizz);
+        Thread B = new Thread(fb::buzz);
+        Thread C = new Thread(fb::fizzbuzz);
+        Thread D = new Thread(fb::number);
+        Thread OUT = new Thread(fb::output);
+
+        A.start();
+        B.start();
+        C.start();
+        D.start();
+        OUT.start();
+    }
+}
