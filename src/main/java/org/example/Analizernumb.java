@@ -109,5 +109,17 @@ public class Analizernumb {
         C.start();
         D.start();
         OUT.start();
+        try{
+            OUT.join();
+              A.join();
+            B.join();
+            C.join();
+            D.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("All threads finished.");
+        
     }
 }
